@@ -13,22 +13,29 @@ import (
 
 type Topics struct {
 	Topic string `json:"topic"`
+	Room string `json:"room"`
 }
 
-func readTopics() []Topics {
+func readTopics() map[string]Topics {
 	file, _ := ioutil.ReadFile("topics.json")
 	data := make([]Topics,0)
 
-	_ = json.Unmarshal([]byte(file), &data)
+	json.Unmarshal([]byte(file), &data)
 
-	return data
+	dataMap := make(map[string]Topics)
+	for i := 0; i < len(data); i++ {
+		dataMap[data[i].Topic] = data[i]
+	}
+
+	return dataMap
 }
 
-func sendToListener(msg *kafka.Message) {
+func sendToListener(msg *kafka.Message, topic string) {
 	var message SSEMessage
 	message.accountNumber = "55"
-	message.room = "test"
+	message.room = topic
 	message.msg = formatSSE("testing", string(msg.Value))
+
 	go func() {
 		for messageChannel := range messageChannels {
 			messageChannel <- message
@@ -39,19 +46,15 @@ func sendToListener(msg *kafka.Message) {
 
 func main() {
 	topicsConfig := readTopics()
-	_ = godotenv.Load()
+	godotenv.Load()
 	apiVersion := os.Getenv("API_VERSION")
-	var topics []string
-	for i := 0; i < len(topicsConfig); i++ {
-		topics = append(topics, topicsConfig[i].Topic)
-	}
 
 	if apiVersion == "" {
 		apiVersion = "v1"
 	}
 
 	go func(){
-		connectKafka(topics, sendToListener)
+		connectKafka(topicsConfig, sendToListener)
 	}()
 
 	http.HandleFunc(fmt.Sprintf("/api/notifier/%s/connect", apiVersion), listenHandler)

@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"strings"
+	"fmt"
 )
 
 type SSEMessage struct {
@@ -32,6 +33,7 @@ func formatSSE(event string, data string) []byte {
 func listenHandler(w http.ResponseWriter, req *http.Request) {
 	accountNumber := req.URL.Query().Get("account_number")
 	room := req.URL.Query().Get("room")
+
     w.Header().Set("Connection", "keep-alive")
     w.Header().Set("Content-Type", "text/event-stream")
     w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -42,13 +44,22 @@ func listenHandler(w http.ResponseWriter, req *http.Request) {
     for {
         select {
 		case channel := <-_messageChannel:
-			if accountNumber == channel.accountNumber && room == channel.room {
-				w.Write(channel.msg)
+			if accountNumber == channel.accountNumber {
+				fmt.Println("User found")
+				if channel.room == "" {
+					fmt.Println("No room, broadcasting!")
+					w.Write(channel.msg)
+				} else if room == channel.room {
+					fmt.Println("Sending to specific room")
+					w.Write(channel.msg)
+				} else {
+					fmt.Println("Not sending", channel.room, room)
+				}
 			}
             w.(http.Flusher).Flush()
         case <-req.Context().Done():
             delete(messageChannels, _messageChannel)
-            return
+			return
         }
     }
 }

@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-func connectKafka(topics []string, fp func(*kafka.Message)) {
+func connectKafka(topicsConfig map[string]Topics, fp func(*kafka.Message, string)) {
 	broker := os.Getenv("KAFKA_BROKER")
 	group := os.Getenv("KAFKA_GROUP")
 	sigchan := make(chan os.Signal, 1)
@@ -34,6 +34,11 @@ func connectKafka(topics []string, fp func(*kafka.Message)) {
 		os.Exit(1)
 	}
 
+	var topics []string
+	for _, element := range topicsConfig {
+		topics = append(topics, element.Topic)
+    }
+
 	err = c.SubscribeTopics(topics, nil)
 
 	run := true
@@ -51,7 +56,7 @@ func connectKafka(topics []string, fp func(*kafka.Message)) {
 
 			switch e := ev.(type) {
 			case *kafka.Message:
-				fp(e)
+				fp(e, topicsConfig[*e.TopicPartition.Topic].Room)
 			case kafka.Error:
 				fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == kafka.ErrAllBrokersDown {
