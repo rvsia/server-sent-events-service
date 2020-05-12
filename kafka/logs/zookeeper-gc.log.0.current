@@ -1,8 +1,0 @@
-OpenJDK 64-Bit Server VM (25.222-b10) for linux-amd64 JRE (1.8.0_222-b10), built on Jul 31 2019 00:00:00 by "mockbuild" with gcc 9.1.1 20190605 (Red Hat 9.1.1-2)
-Memory: 4k page, physical 32247876k(9055708k free), swap 16760828k(16760828k free)
-CommandLine flags: -XX:+ExplicitGCInvokesConcurrent -XX:GCLogFileSize=104857600 -XX:InitialHeapSize=536870912 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ManagementServer -XX:MaxGCPauseMillis=20 -XX:MaxHeapSize=536870912 -XX:NumberOfGCLogFiles=10 -XX:+PrintGC -XX:+PrintGCDateStamps -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseG1GC -XX:+UseGCLogFileRotation 
-Heap
- garbage-first heap   total 524288K, used 16384K [0x00000000e0000000, 0x00000000e0101000, 0x0000000100000000)
-  region size 1024K, 17 young (17408K), 0 survivors (0K)
- Metaspace       used 10268K, capacity 10452K, committed 10752K, reserved 1058816K
-  class space    used 1089K, capacity 1156K, committed 1280K, reserved 1048576K
