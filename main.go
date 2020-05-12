@@ -49,6 +49,10 @@ func main() {
 		topics = append(topics, topicsConfig[i].Topic)
 	}
 
+	if apiVersion == "" {
+		apiVersion = "v1"
+	}
+
 	go func(){
 		connectKafka(topics, sendToListener())
 	}()
