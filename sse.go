@@ -4,17 +4,35 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
+type SSEMessage struct {
+	room string
+	accountNumber string
+	msg []byte
+}
+
 type Broker struct {
-    Notifier chan []byte
-    newClients chan chan []byte
-    closingClients chan chan []byte
-    clients map[chan []byte]bool
+    Notifier chan SSEMessage
+    newClients chan chan SSEMessage
+    closingClients chan chan SSEMessage
+    clients map[chan SSEMessage]bool
+}
+
+func formatSSE(event string, data string) []byte {
+	eventPayload := "event: " + event + "\n"
+    dataLines := strings.Split(data, "\n")
+    for _, line := range dataLines {
+        eventPayload = eventPayload + "data: " + line + "\n"
+    }
+    return []byte(eventPayload + "\n")
 }
 
 func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	flusher, ok := rw.(http.Flusher)
+	accountNumber := req.URL.Query().Get("account_number")
+	room := req.URL.Query().Get("room")
 
 	if !ok {
 		http.Error(rw, "Streaming unsupported!", http.StatusInternalServerError)
@@ -26,7 +44,7 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Connection", "keep-alive")
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
 
-	messageChan := make(chan []byte)
+	messageChan := make(chan SSEMessage)
 
 	broker.newClients <- messageChan
 
@@ -44,9 +62,10 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	for {
 		// Write to the ResponseWriter
 		// Server Sent Events compatible
-		fmt.Fprintf(rw, "data: %s\n\n", <-messageChan)
-	  
-		// Flush the data immediatly instead of buffering it for later.
+		channel := <- messageChan
+		if accountNumber == channel.accountNumber && room == channel.room {
+			fmt.Fprintf(rw, "%s\n", channel.msg)
+		}
 		flusher.Flush()
 	}
 }
@@ -54,10 +73,10 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 // Broker factory
 func NewServer() (broker *Broker) {
 	broker = &Broker{
-	  Notifier:       make(chan []byte, 1),
-	  newClients:     make(chan chan []byte),
-	  closingClients: make(chan chan []byte),
-	  clients:        make(map[chan []byte]bool),
+	  Notifier:       make(chan SSEMessage, 1),
+	  newClients:     make(chan chan SSEMessage),
+	  closingClients: make(chan chan SSEMessage),
+	  clients:        make(map[chan SSEMessage]bool),
 	}
   
 	go broker.listen()

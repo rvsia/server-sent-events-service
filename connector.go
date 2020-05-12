@@ -19,7 +19,7 @@ func connectKafka(topics []string, fp func(*kafka.Message)) {
 		"broker.address.family": "v4",
 		"group.id":              group,
 		"session.timeout.ms":    6000,
-		"auto.offset.reset":     "earliest"})
+		"auto.offset.reset":     "latest"})
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create consumer: %s\n", err)

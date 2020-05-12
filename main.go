@@ -26,7 +26,11 @@ func readTopics() []Topics {
 
 func sendToListener(broker *Broker) (func(*kafka.Message)) {
 	return func (msg *kafka.Message) {
-		broker.Notifier <- []byte(msg.Value)
+		var message SSEMessage
+		message.accountNumber = "55"
+		message.room = "test"
+		message.msg = formatSSE("testing", string(msg.Value))
+		broker.Notifier <- message
 		fmt.Printf("%% Message on %s:\n%s\n", msg.TopicPartition, string(msg.Value))
 	}
 }
@@ -41,15 +45,6 @@ func main() {
 	}
 
 	broker := NewServer()
-
-	// go func() {
-	// 	for {
-	// 		time.Sleep(time.Second * 2)
-	// 		eventString := fmt.Sprintf("the time is %v", time.Now())
-	// 		log.Println("Receiving event")
-	// 		broker.Notifier <- []byte(eventString)
-	// 	}
-	// }()
 
 	go func(){
 		connectKafka(topics, sendToListener(broker))
