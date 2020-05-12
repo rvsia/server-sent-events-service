@@ -6,6 +6,9 @@ import (
 	"github.com/joho/godotenv"
 	"encoding/json"
 	"io/ioutil"
+	"log"
+	// "time"
+	"net/http"
 )
 
 type Topics struct {
@@ -21,8 +24,11 @@ func readTopics() []Topics {
 	return data
 }
 
-func printKafka(msg *kafka.Message) {
-	fmt.Printf("%% Message on %s:\n%s\n", msg.TopicPartition, string(msg.Value))
+func sendToListener(broker *Broker) (func(*kafka.Message)) {
+	return func (msg *kafka.Message) {
+		broker.Notifier <- []byte(msg.Value)
+		fmt.Printf("%% Message on %s:\n%s\n", msg.TopicPartition, string(msg.Value))
+	}
 }
 
 func main() {
@@ -34,5 +40,20 @@ func main() {
 		topics = append(topics, topicsConfig[i].Topic)
 	}
 
-	connectKafka(topics, printKafka)
+	broker := NewServer()
+
+	// go func() {
+	// 	for {
+	// 		time.Sleep(time.Second * 2)
+	// 		eventString := fmt.Sprintf("the time is %v", time.Now())
+	// 		log.Println("Receiving event")
+	// 		broker.Notifier <- []byte(eventString)
+	// 	}
+	// }()
+
+	go func(){
+		connectKafka(topics, sendToListener(broker))
+	}()
+
+	log.Fatal("HTTP server error: ", http.ListenAndServe("localhost:3000", broker))
 }
