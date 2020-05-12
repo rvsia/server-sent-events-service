@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"os"
 	// "time"
 	"net/http"
 )
@@ -24,13 +25,17 @@ func readTopics() []Topics {
 	return data
 }
 
-func sendToListener(broker *Broker) (func(*kafka.Message)) {
+func sendToListener() (func(*kafka.Message)) {
 	return func (msg *kafka.Message) {
 		var message SSEMessage
 		message.accountNumber = "55"
 		message.room = "test"
 		message.msg = formatSSE("testing", string(msg.Value))
-		broker.Notifier <- message
+		go func() {
+			for messageChannel := range messageChannels {
+				messageChannel <- message
+			}
+		}()
 		fmt.Printf("%% Message on %s:\n%s\n", msg.TopicPartition, string(msg.Value))
 	}
 }
@@ -38,17 +43,16 @@ func sendToListener(broker *Broker) (func(*kafka.Message)) {
 func main() {
 	topicsConfig := readTopics()
 	_ = godotenv.Load()
-	
+	apiVersion := os.Getenv("API_VERSION")
 	var topics []string
 	for i := 0; i < len(topicsConfig); i++ {
 		topics = append(topics, topicsConfig[i].Topic)
 	}
 
-	broker := NewServer()
-
 	go func(){
-		connectKafka(topics, sendToListener(broker))
+		connectKafka(topics, sendToListener())
 	}()
 
-	log.Fatal("HTTP server error: ", http.ListenAndServe("localhost:3000", broker))
+	http.HandleFunc(fmt.Sprintf("/api/notifier/%s/connect", apiVersion), listenHandler)
+	log.Fatal(http.ListenAndServe("localhost:3000", nil))
 }

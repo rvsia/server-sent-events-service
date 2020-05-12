@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -20,6 +18,8 @@ type Broker struct {
     clients map[chan SSEMessage]bool
 }
 
+var messageChannels = make(map[chan SSEMessage]bool)
+
 func formatSSE(event string, data string) []byte {
 	eventPayload := "event: " + event + "\n"
     dataLines := strings.Split(data, "\n")
@@ -29,82 +29,26 @@ func formatSSE(event string, data string) []byte {
     return []byte(eventPayload + "\n")
 }
 
-func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	flusher, ok := rw.(http.Flusher)
+func listenHandler(w http.ResponseWriter, req *http.Request) {
 	accountNumber := req.URL.Query().Get("account_number")
 	room := req.URL.Query().Get("room")
+    w.Header().Set("Connection", "keep-alive")
+    w.Header().Set("Content-Type", "text/event-stream")
+    w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	if !ok {
-		http.Error(rw, "Streaming unsupported!", http.StatusInternalServerError)
-		return
-	}
+    _messageChannel := make(chan SSEMessage)
+    messageChannels[_messageChannel] = true
 
-	rw.Header().Set("Content-Type", "text/event-stream")
-	rw.Header().Set("Cache-Control", "no-cache")
-	rw.Header().Set("Connection", "keep-alive")
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
-
-	messageChan := make(chan SSEMessage)
-
-	broker.newClients <- messageChan
-
-	defer func() {
-		broker.closingClients <- messageChan
-	}()
-
-	notify := rw.(http.CloseNotifier).CloseNotify()
-
-	go func() {
-		<-notify
-		broker.closingClients <- messageChan
-	}()
-
-	for {
-		// Write to the ResponseWriter
-		// Server Sent Events compatible
-		channel := <- messageChan
-		if accountNumber == channel.accountNumber && room == channel.room {
-			fmt.Fprintf(rw, "%s\n", channel.msg)
-		}
-		flusher.Flush()
-	}
-}
-
-// Broker factory
-func NewServer() (broker *Broker) {
-	broker = &Broker{
-	  Notifier:       make(chan SSEMessage, 1),
-	  newClients:     make(chan chan SSEMessage),
-	  closingClients: make(chan chan SSEMessage),
-	  clients:        make(map[chan SSEMessage]bool),
-	}
-  
-	go broker.listen()
-  
-	return
-}
-
-func (broker *Broker) listen() {
-	for {
-	  select {
-		case s := <-broker.newClients:
-		  // A new client has connected.
-		  // Register their message channel
-		  broker.clients[s] = true
-		  log.Printf("Client added. %d registered clients", len(broker.clients))
-  
-		case s := <-broker.closingClients:
-		  // A client has dettached and we want to
-		  // stop sending them messages.
-		  delete(broker.clients, s)
-		  log.Printf("Removed client. %d registered clients", len(broker.clients))
-  
-		case event := <-broker.Notifier:
-		  // We got a new event from the outside!
-		  // Send event to all connected clients
-		  for clientMessageChan, _ := range broker.clients {
-			clientMessageChan <- event
-		  }
-	  }
-	}
+    for {
+        select {
+		case channel := <-_messageChannel:
+			if accountNumber == channel.accountNumber && room == channel.room {
+				w.Write(channel.msg)
+			}
+            w.(http.Flusher).Flush()
+        case <-req.Context().Done():
+            delete(messageChannels, _messageChannel)
+            return
+        }
+    }
 }
