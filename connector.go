@@ -14,6 +14,14 @@ func connectKafka(topics []string, fp func(*kafka.Message)) {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
 
+	if broker == "" {
+		broker = "localhost:9092"
+	}
+
+	if group == "" {
+		group = "test"
+	}
+
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": broker,
 		"broker.address.family": "v4",

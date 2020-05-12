@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	// "time"
 	"net/http"
 )
 
@@ -25,19 +24,17 @@ func readTopics() []Topics {
 	return data
 }
 
-func sendToListener() (func(*kafka.Message)) {
-	return func (msg *kafka.Message) {
-		var message SSEMessage
-		message.accountNumber = "55"
-		message.room = "test"
-		message.msg = formatSSE("testing", string(msg.Value))
-		go func() {
-			for messageChannel := range messageChannels {
-				messageChannel <- message
-			}
-		}()
-		fmt.Printf("%% Message on %s:\n%s\n", msg.TopicPartition, string(msg.Value))
-	}
+func sendToListener(msg *kafka.Message) {
+	var message SSEMessage
+	message.accountNumber = "55"
+	message.room = "test"
+	message.msg = formatSSE("testing", string(msg.Value))
+	go func() {
+		for messageChannel := range messageChannels {
+			messageChannel <- message
+		}
+	}()
+	fmt.Printf("%% Message on %s:\n%s\n", msg.TopicPartition, string(msg.Value))
 }
 
 func main() {
@@ -54,9 +51,9 @@ func main() {
 	}
 
 	go func(){
-		connectKafka(topics, sendToListener())
+		connectKafka(topics, sendToListener)
 	}()
 
 	http.HandleFunc(fmt.Sprintf("/api/notifier/%s/connect", apiVersion), listenHandler)
-	log.Fatal(http.ListenAndServe("localhost:3000", nil))
+	log.Fatal(http.ListenAndServe(":3000", nil))
 }
