@@ -1,4 +1,6 @@
 [ {
-    "topic": "test1",
-    "room": "test"
+    "topic": "platform.inventory.events",
+    "room": "inventory",
+    "event": "notification",
+    "enhancers": [ "inventory" ]
 } ]
