@@ -19,6 +19,8 @@ func ConnectKafka(topicsConfig map[string]Topics, fp func(*kafka.Message, Topics
 		group = "test"
 	}
 
+	fmt.Println("Using server", broker)
+
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers":     broker,
 		"broker.address.family": "v4",
@@ -36,6 +38,8 @@ func ConnectKafka(topicsConfig map[string]Topics, fp func(*kafka.Message, Topics
 		topics = append(topics, element.Topic)
 	}
 
+	fmt.Println("Listening on topics", topics)
+
 	err = c.SubscribeTopics(topics, nil)
 
 	defer c.Close()
@@ -48,7 +52,6 @@ func ConnectKafka(topicsConfig map[string]Topics, fp func(*kafka.Message, Topics
 
 		switch e := ev.(type) {
 		case *kafka.Message:
-			fmt.Println("Now serving!", len(topicsConfig[*e.TopicPartition.Topic].Enhancers))
 			fp(e, topicsConfig[*e.TopicPartition.Topic])
 		case kafka.Error:
 			fmt.Fprintf(os.Stderr, "%% Error: %v: %v\n", e.Code(), e)
