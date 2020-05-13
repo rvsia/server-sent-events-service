@@ -83,5 +83,8 @@ func main() {
 	go ConnectKafka(topicsConfig, sendToListener)
 
 	http.HandleFunc(fmt.Sprintf("/api/%s/%s/connect", appName, apiVersion), ListenHandler)
+	http.HandleFunc(fmt.Sprintf("/api/%s/%s/lubdub", appName, apiVersion), func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "lubdub")
+	})
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
