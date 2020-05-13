@@ -20,10 +20,13 @@ type Topics struct {
 }
 
 func readTopics() map[string]Topics {
-	file, _ := ioutil.ReadFile("topics.json")
+	file, _ := ioutil.ReadFile("./topics.json")
 	data := make([]Topics, 0)
 
-	json.Unmarshal([]byte(file), &data)
+	err := json.Unmarshal([]byte(file), &data)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	dataMap := make(map[string]Topics)
 	for i := 0; i < len(data); i++ {

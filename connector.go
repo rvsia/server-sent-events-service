@@ -33,12 +33,15 @@ func ConnectKafka(topicsConfig map[string]Topics, fp func(*kafka.Message, Topics
 		os.Exit(1)
 	}
 
+	fmt.Println("Using config", topicsConfig)
+
 	var topics []string
 	for _, element := range topicsConfig {
 		topics = append(topics, element.Topic)
 	}
 
 	fmt.Println("Listening on topics", topics)
+
 
 	err = c.SubscribeTopics(topics, nil)
 
