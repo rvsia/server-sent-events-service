@@ -23,6 +23,8 @@ func readTopics() map[string]Topics {
 	file, _ := ioutil.ReadFile("./topics.json")
 	data := make([]Topics, 0)
 
+	fmt.Println("Using config file", string(file))
+
 	err := json.Unmarshal([]byte(file), &data)
 	if err != nil {
 		fmt.Println(err)
