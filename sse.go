@@ -37,6 +37,9 @@ func ListenHandler(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("We have a new connection!", sseChannel)
 
+	w.Write([]byte("data: first handshake\n\n"))
+	w.(http.Flusher).Flush()
+
 	for {
 		select {
 		case channel := <-_messageChannel:
