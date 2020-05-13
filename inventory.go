@@ -1,8 +1,7 @@
-package enhancers
+package main
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type Host struct {
@@ -10,15 +9,14 @@ type Host struct {
 }
 
 type InventoryMessage struct {
-	Host Host `json:"host"`
+	InventoryHost Host `json:"host"`
 }
 
 func InventoryEnhancer(msg string, accountNumber string) bool {
 	var formatted InventoryMessage
 	json.Unmarshal([]byte(msg), &formatted)
-	fmt.Println("inventory data", msg)
 
-	if formatted.Host.Account == accountNumber {
+	if formatted.InventoryHost.Account == accountNumber {
 		return true
 	}
 

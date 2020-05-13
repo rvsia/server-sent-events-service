@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/karelhala/hackaton-2020/communicator"
 	"github.com/joho/godotenv"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
@@ -21,7 +20,7 @@ type Topics struct {
 }
 
 func readTopics() map[string]Topics {
-	file, _ := ioutil.ReadFile("../topics.json")
+	file, _ := ioutil.ReadFile("topics.json")
 	data := make([]Topics, 0)
 
 	json.Unmarshal([]byte(file), &data)
@@ -42,14 +41,15 @@ func sendToListener(kafkaMessage *kafka.Message, topic Topics) {
 	enhancers := map[string](func(string, string) bool){
 		"inventory": InventoryEnhancer,
 	}
+
 	go func() {
-		for messageChannel, connectorInfo := range messageChannels {
+		for messageChannel, connectorInfo := range MessageChannels {
 			canSend := true
 			for i := 0; i < len(topic.Enhancers); i++ {
 				canSend = enhancers[topic.Enhancers[i]](string(kafkaMessage.Value), connectorInfo.accountNumber)
 			}
 			if canSend {
-				msg := formatSSE(topic.Event, string(kafkaMessage.Value))
+				msg := FormatSSE(topic.Event, string(kafkaMessage.Value))
 				if topic.Room == "" {
 					fmt.Println("No room, broadcasting!")
 					messageChannel <- msg
@@ -62,6 +62,7 @@ func sendToListener(kafkaMessage *kafka.Message, topic Topics) {
 			}
 		}
 	}()
+
 	fmt.Printf("%% Message on %s:\n%s\n", kafkaMessage.TopicPartition, string(kafkaMessage.Value))
 }
 
@@ -81,6 +82,6 @@ func main() {
 
 	go ConnectKafka(topicsConfig, sendToListener)
 
-	http.HandleFunc(fmt.Sprintf("/api/%s/%s/connect", appName, apiVersion), listenHandler)
+	http.HandleFunc(fmt.Sprintf("/api/%s/%s/connect", appName, apiVersion), ListenHandler)
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }

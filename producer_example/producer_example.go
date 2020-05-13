@@ -19,8 +19,9 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"os"
+
+	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
 func main() {
@@ -47,7 +48,7 @@ func main() {
 	// .Events channel is used.
 	deliveryChan := make(chan kafka.Event)
 
-	value := "Hello Go!"
+	value := `{"host":{"account":"55"}}`
 	err = p.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
 		Value:          []byte(value),

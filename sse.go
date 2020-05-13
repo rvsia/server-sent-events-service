@@ -11,9 +11,9 @@ type SSEMessage struct {
 	accountNumber string
 }
 
-var messageChannels = make(map[chan []byte]SSEMessage)
+var MessageChannels = make(map[chan []byte]SSEMessage)
 
-func formatSSE(event string, data string) []byte {
+func FormatSSE(event string, data string) []byte {
 	eventPayload := "event: " + event + "\n"
 	dataLines := strings.Split(data, "\n")
 	for _, line := range dataLines {
@@ -22,7 +22,7 @@ func formatSSE(event string, data string) []byte {
 	return []byte(eventPayload + "\n")
 }
 
-func listenHandler(w http.ResponseWriter, req *http.Request) {
+func ListenHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -33,7 +33,7 @@ func listenHandler(w http.ResponseWriter, req *http.Request) {
 	sseChannel.room = req.URL.Query().Get("room")
 
 	_messageChannel := make(chan []byte)
-	messageChannels[_messageChannel] = sseChannel
+	MessageChannels[_messageChannel] = sseChannel
 
 	fmt.Println("We have a new connection!", sseChannel)
 
@@ -43,7 +43,7 @@ func listenHandler(w http.ResponseWriter, req *http.Request) {
 			w.Write(channel)
 			w.(http.Flusher).Flush()
 		case <-req.Context().Done():
-			delete(messageChannels, _messageChannel)
+			delete(MessageChannels, _messageChannel)
 			return
 		}
 	}
