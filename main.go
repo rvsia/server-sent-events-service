@@ -94,5 +94,13 @@ func main() {
 	http.HandleFunc(fmt.Sprintf("/api/%s/%s/lubdub", appName, apiVersion), func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "lubdub")
 	})
-	log.Fatal(http.ListenAndServe(":3000", nil))
+
+	srv := &http.Server{
+		Addr:         ":3000",
+		Handler:      nil,
+		ReadTimeout:  0,
+		WriteTimeout: 0,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }
