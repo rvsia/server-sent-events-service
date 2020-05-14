@@ -21,6 +21,9 @@ type Topics struct {
 
 func readTopics() map[string]Topics {
 	file, _ := ioutil.ReadFile("./topics.json")
+	if string(file) == "" {
+		file = []byte(os.Getenv("CONFIG_JSON"))
+	}
 	data := make([]Topics, 0)
 
 	fmt.Println("Using config file", string(file))
@@ -72,8 +75,8 @@ func sendToListener(kafkaMessage *kafka.Message, topic Topics) {
 }
 
 func main() {
-	topicsConfig := readTopics()
 	godotenv.Load()
+	topicsConfig := readTopics()
 	apiVersion := os.Getenv("API_VERSION")
 	appName := os.Getenv("APP_NAME")
 
