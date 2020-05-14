@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
@@ -98,8 +99,8 @@ func main() {
 	srv := &http.Server{
 		Addr:         ":3000",
 		Handler:      nil,
-		ReadTimeout:  0,
-		WriteTimeout: 0,
+		ReadTimeout:  5 * time.Minute,
+		WriteTimeout: 5 * time.Minute,
 	}
 
 	log.Fatal(srv.ListenAndServe())
