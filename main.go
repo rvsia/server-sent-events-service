@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/gobuffalo/packr"
 	"github.com/joho/godotenv"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
@@ -21,13 +21,15 @@ type Topics struct {
 }
 
 func readTopics() map[string]Topics {
-	file, _ := ioutil.ReadFile("./topics.json")
-	if string(file) == "" {
-		file = []byte(os.Getenv("CONFIG_JSON"))
+	box := packr.NewBox("./static")
+	file, foundError := box.FindString("topics.json")
+	if foundError != nil {
+		fmt.Println("Error while fetching file")
+		file = os.Getenv("CONFIG_JSON")
 	}
 	data := make([]Topics, 0)
 
-	fmt.Println("Using config file", string(file))
+	
 
 	err := json.Unmarshal([]byte(file), &data)
 	if err != nil {
