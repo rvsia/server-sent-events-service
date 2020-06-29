@@ -3,4 +3,9 @@
     "room": "inventory",
     "event": "notification",
     "enhancers": [ "inventory" ]
+}, {
+    "topic": "request_started",
+    "room": "inventory",
+    "event": "approval-test",
+    "enhancers": []
 } ]
