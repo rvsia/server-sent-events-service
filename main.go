@@ -51,6 +51,7 @@ func sendToListener(kafkaMessage *kafka.Message, topic Topics) {
 
 	enhancers := map[string](func(string, string) bool){
 		"inventory": InventoryEnhancer,
+		"approval": ApprovalEnhacer,
 	}
 
 	go func() {

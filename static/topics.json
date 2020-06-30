@@ -4,8 +4,8 @@
     "event": "notification",
     "enhancers": [ "inventory" ]
 }, {
-    "topic": "request_started",
-    "room": "inventory",
+    "topic": "platform.approval",
+    "room": "approval",
     "event": "approval-test",
-    "enhancers": []
+    "enhancers": [ "approval" ]
 } ]
