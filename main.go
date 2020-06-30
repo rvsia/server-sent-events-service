@@ -29,8 +29,6 @@ func readTopics() map[string]Topics {
 	}
 	data := make([]Topics, 0)
 
-	
-
 	err := json.Unmarshal([]byte(file), &data)
 	if err != nil {
 		fmt.Println(err)
@@ -51,9 +49,8 @@ func sendToListener(kafkaMessage *kafka.Message, topic Topics) {
 
 	enhancers := map[string](func(string, string) bool){
 		"inventory": InventoryEnhancer,
-		"approval": ApprovalEnhacer,
+		"approval":  ApprovalEnhancer,
 	}
-
 	go func() {
 		for messageChannel, connectorInfo := range MessageChannels {
 			canSend := true
