@@ -8,4 +8,9 @@
     "room": "approval",
     "event": "approval-test",
     "enhancers": [ "approval" ]
+}, {
+    "topic": "platform.sources.event-stream",
+    "room": "sources",
+    "event": "sources-test",
+    "enhancers": [ "sources" ]
 } ]
